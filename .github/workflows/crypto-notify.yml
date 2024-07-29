@@ -2,7 +2,7 @@ name: Crypto Price Notify
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '0 * * * *'
   push:
     branches:
       - main
@@ -18,14 +18,12 @@ jobs:
     - name: Get Crypto Prices
       id: get_prices
       run: |
-        API_URL="https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,optimism&vs_currencies=usd"
+        API_URL="https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd"
         RESPONSE=$(curl -s $API_URL)
         BTC_PRICE=$(echo $RESPONSE | jq -r '.bitcoin.usd')
         ETH_PRICE=$(echo $RESPONSE | jq -r '.ethereum.usd')
-        OP_PRICE=$(echo $RESPONSE | jq -r '.optimism.usd')
         echo "BTC_PRICE=${BTC_PRICE}" >> $GITHUB_ENV
         echo "ETH_PRICE=${ETH_PRICE}" >> $GITHUB_ENV
-        echo "OP_PRICE=${OP_PRICE}" >> $GITHUB_ENV
 
     - name: Send Notification to Line
       env:
@@ -34,5 +32,5 @@ jobs:
         ETH_PRICE: ${{ env.ETH_PRICE }}
         OP_PRICE: ${{ env.OP_PRICE }}
       run: |
-        MESSAGE="BTC: $BTC_PRICE USD\nETH: $ETH_PRICE USD\nOP: $OP_PRICE USD"
+        MESSAGE="BTC: $BTC_PRICE USD | ETH: $ETH_PRICE USD"
         curl -X POST -H "Authorization: Bearer $LINE_NOTIFY_TOKEN" -F "message=$MESSAGE" https://notify-api.line.me/api/notify
